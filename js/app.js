@@ -1217,6 +1217,13 @@ function switchAdminTab(tab) {
   }
   $('admin-tab-users').classList.toggle('hidden', tab !== 'users');
   $('admin-tab-sessions').classList.toggle('hidden', tab !== 'sessions');
+
+  // Auto-load on tab switch so users don't have to click Refresh
+  // before seeing anything. loadAdmin* internally aborts any in-flight
+  // request and bails early if no admin token is set, so rapid tab
+  // toggling is safe.
+  if (tab === 'users')         loadAdminUsers();
+  else if (tab === 'sessions') loadAdminSessions();
 }
 
 document.addEventListener('click', (ev) => {
