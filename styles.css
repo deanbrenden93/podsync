@@ -1,0 +1,465 @@
+/* PodSync web styles. Lifted from the desktop build's index.html so
+   the two clients look identical side by side. */
+
+:root {
+  --bg: #0f0f1a;
+  --bg-card: rgba(255,255,255,0.04);
+  --bg-card-hover: rgba(255,255,255,0.07);
+  --bg-input: rgba(255,255,255,0.06);
+  --accent: #8b5cf6;
+  --accent-glow: rgba(139,92,246,0.3);
+  --accent-hover: #a78bfa;
+  --red: #ef4444;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --orange: #f97316;
+  --text: #e8e8f0;
+  --text-dim: #9898b0;
+  --text-muted: #5a5a70;
+  --border: rgba(255,255,255,0.06);
+  --radius: 14px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Tell the browser to render native form controls (the <option>
+     popup in particular) using its dark theme. Without this, Chrome
+     and Edge paint the dropdown list on a stark white background
+     regardless of our CSS. */
+  color-scheme: dark;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  -webkit-font-smoothing: antialiased;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+body::-webkit-scrollbar { width: 8px; }
+body::-webkit-scrollbar-track { background: transparent; }
+body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(139,92,246,0.06) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(59,130,246,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+h1, h2, h3 { font-family: 'Outfit', sans-serif; font-weight: 600; letter-spacing: -0.02em; }
+
+/* ── App container (keeps the desktop app's 600px width so the designs match) ── */
+.app {
+  max-width: 620px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Screens ── */
+.screen {
+  display: none;
+  flex-direction: column;
+  padding: 32px 28px;
+  min-height: 100vh;
+  animation: fadeIn 0.3s ease;
+}
+.screen.active { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes pulse  { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+/* ── Header ── */
+.header { margin-bottom: 24px; }
+.header h1 { font-size: 28px; margin-bottom: 4px; }
+.subtitle { color: var(--text-dim); font-size: 14px; line-height: 1.5; }
+
+.back-link {
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-block;
+  margin-bottom: 16px;
+  transition: color var(--transition);
+  user-select: none;
+}
+.back-link:hover { color: var(--text); }
+
+/* ── Cards ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: var(--transition);
+}
+.card:hover { background: var(--bg-card-hover); }
+.card-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.card-desc {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+/* ── Buttons ── */
+.btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+.btn:disabled, .btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: grayscale(0.2);
+}
+.btn-primary   { background: var(--accent); color: white; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+.btn-secondary { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover:not(:disabled) { background: var(--bg-card-hover); }
+.btn-danger    { background: var(--red); color: white; }
+.btn-danger:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-sm        { padding: 8px 16px; font-size: 13px; }
+.btn-record {
+  background: var(--red); color: white; padding: 16px 32px;
+  font-size: 16px; font-weight: 600; border-radius: 999px;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+}
+.btn-record:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 4px 30px rgba(239, 68, 68, 0.5); }
+
+/* ── Inputs ── */
+.input-label { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; font-weight: 500; }
+/* Use a broad `input` selector so bare <input> (no type attribute,
+   defaults to text) gets styled alongside explicit types. Excludes
+   the few form controls that shouldn't look like text boxes. */
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=submit]):not([type=button]),
+select, textarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  transition: var(--transition);
+}
+input:disabled, select:disabled, textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+input::placeholder { color: var(--text-muted); }
+
+/* Dropdown list items. Chrome/Edge respect these in the popup
+   menu on Windows; on macOS Safari the native menu overrides them
+   but color-scheme: dark on :root already makes it readable. */
+select option {
+  background-color: #1a1a2e;
+  color: var(--text);
+  padding: 6px 10px;
+}
+select option:checked,
+select option:hover {
+  background-color: var(--accent);
+  color: white;
+}
+select option:disabled {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.code-display, .pin-display {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--accent-hover);
+  background: var(--bg-input);
+  padding: 10px 16px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+/* ── Status / toast ── */
+.status {
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 10px 0;
+  line-height: 1.4;
+}
+.status:empty { display: none; }
+.status-info    { background: rgba(139,92,246,0.08); color: var(--accent-hover); border: 1px solid rgba(139,92,246,0.18); }
+.status-success { background: rgba(34,197,94,0.08);  color: var(--green);         border: 1px solid rgba(34,197,94,0.2); }
+.status-warning { background: rgba(234,179,8,0.08);  color: var(--yellow);        border: 1px solid rgba(234,179,8,0.2); }
+.status-error   { background: rgba(239,68,68,0.08);  color: var(--red);           border: 1px solid rgba(239,68,68,0.25); }
+
+.copy-toast {
+  position: fixed;
+  bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--accent);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  transition: transform 0.3s ease;
+  z-index: 100;
+}
+.copy-toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── Meters / participants ── */
+.level-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+.level-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green) 0%, var(--yellow) 70%, var(--red) 100%);
+  width: 0%;
+  transition: width 0.08s linear;
+}
+
+.timer {
+  font-family: 'Outfit', sans-serif;
+  font-size: 36px;
+  text-align: center;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin: 10px 0;
+}
+
+.participants-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.participant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  --chip-glow: 0;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.participant-chip.ready { border-color: var(--green); color: var(--green); }
+.participant-chip.you   { border-color: var(--accent); color: var(--accent-hover); }
+.participant-chip.speaking {
+  border-color: var(--accent-hover);
+  box-shadow: 0 0 calc(16px * var(--chip-glow, 0)) rgba(167,139,250,calc(0.6 * var(--chip-glow, 0)));
+}
+
+/* Distinct, OBVIOUS flash when a sync tone fires. The regular
+   "speaking" style is quiet by design (it has to compete with the
+   visual noise of multiple chips glowing at once), but a sync tone
+   is a discrete event the user needs immediate confirmation of. */
+.participant-chip.sync-pulse {
+  animation: syncFlash 0.7s ease-out;
+}
+@keyframes syncFlash {
+  0%   { background: var(--bg-input); transform: scale(1); box-shadow: 0 0 0 0 rgba(139,92,246,0); }
+  20%  { background: var(--accent); color: white; transform: scale(1.15); box-shadow: 0 0 24px 6px rgba(167,139,250,0.7); }
+  100% { background: var(--bg-input); transform: scale(1); box-shadow: 0 0 0 0 rgba(139,92,246,0); }
+}
+
+/* Brief "sent" state on the Sync Tone button so a click is obviously
+   registered. The tone itself is ~100 ms long, so we hold the visual
+   acknowledgement for a bit longer than that (600 ms). */
+.btn.sync-sent {
+  background: var(--green) !important;
+  color: white !important;
+  pointer-events: none;
+}
+.chip-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.chip-role { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ── Misc ── */
+.spacer { height: 16px; }
+.spacer-lg { height: 32px; }
+.flex-row { display: flex; gap: 8px; }
+.flex-center { display: flex; justify-content: center; }
+.mt-auto { margin-top: auto; }
+.hidden { display: none !important; }
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.2s ease;
+}
+
+.session-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.session-name { font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 15px; }
+.session-date { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+.session-files { color: var(--text-dim); font-size: 12px; margin: 8px 0; }
+.guest-tag {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  margin-left: 6px;
+  border-radius: 4px;
+  background: rgba(138, 111, 255, 0.18);
+  color: #b8a0ff;
+  vertical-align: middle;
+}
+.session-file { color: var(--text-muted); font-size: 12px; padding: 2px 0; }
+.session-actions { display: flex; gap: 8px; margin-top: 12px; }
+.session-actions .btn { flex: 1; }
+
+.usage-info {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+/* ── Admin panel tabs ── */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.admin-tab {
+  background: transparent;
+  color: var(--text-dim);
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: -1px;
+}
+.admin-tab:hover { color: var(--text); }
+.admin-tab.active {
+  color: var(--accent-hover);
+  border-bottom-color: var(--accent);
+}
+.admin-tab-panel { animation: fadeIn 0.2s ease; }
+
+/* User cards - distinct visual treatment vs session cards so you
+   can tell at a glance which list you're looking at. */
+.admin-user-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.admin-user-card .user-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.admin-user-card .user-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 8px 0;
+}
+.admin-user-card .user-stats .stat-label { color: var(--text-muted); margin-right: 3px; }
+.admin-user-card .user-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* Session cards in admin mode - orange accent stripe to differentiate
+   from green-accent user cards above. */
+.admin-session-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--orange);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+/* ── Loading splash (shown at first paint, hidden once app.js boots) ── */
+#screen-loading {
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+}
+#screen-loading .loader-ring {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.08);
+  border-top-color: var(--accent);
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#screen-loading h1 { font-size: 24px; font-weight: 500; margin-bottom: 6px; }
+#screen-loading .loader-sub { color: var(--text-dim); font-size: 13px; }

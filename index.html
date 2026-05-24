@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f0f1a">
+<title>PodSync Web</title>
+<link rel="icon" type="image/x-icon" href="icon.ico">
+<link rel="shortcut icon" type="image/x-icon" href="icon.ico">
+<link rel="apple-touch-icon" href="icon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="copy-toast" id="toast">Copied!</div>
+
+  <!-- Loading splash (visible at first paint until app.js boots) -->
+  <div class="screen active" id="screen-loading">
+    <div>
+      <div class="loader-ring"></div>
+      <h1>PodSync</h1>
+      <div class="loader-sub">Starting up…</div>
+    </div>
+  </div>
+
+  <!-- Browser-compat banner, shown app-wide when we detect an embedded
+       browser (Cursor's Simple Browser, VS Code preview, etc.) that
+       blocks getUserMedia. Kept hidden by default; app.js reveals it
+       if needed. -->
+  <div id="browser-warn" class="hidden" style="position: fixed; top: 12px; left: 12px; right: 12px; z-index: 50; max-width: 620px; margin: 0 auto; padding: 12px 16px; background: rgba(234,179,8,0.1); border: 1px solid var(--yellow); border-radius: 10px; color: var(--yellow); font-size: 13px; line-height: 1.5;">
+    <strong>Embedded browser detected.</strong>
+    This preview can't access your microphone. Copy the URL and open it in Chrome or Edge to record.
+    <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap">
+      <button class="btn btn-secondary btn-sm" id="warn-copy-url" style="width: auto">Copy URL</button>
+      <button class="btn btn-secondary btn-sm" id="warn-dismiss" style="width: auto">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Mic-blocked modal: appears when the browser has remembered a
+       "Block" decision for the microphone on this origin. We can't
+       un-block from JS - the user has to do it through their browser
+       UI - so this modal's job is to spell out exactly where to click. -->
+  <div id="mic-blocked-modal" class="hidden" style="position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div style="max-width: 520px; width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+      <div class="header" style="margin-bottom: 16px">
+        <h1 style="font-size: 22px">🎤 Microphone blocked</h1>
+        <div class="subtitle">Your browser remembers that you clicked "Block" for this site. We can't re-ask from inside the app — you need to un-block it manually.</div>
+      </div>
+      <div class="card" style="margin-bottom: 12px">
+        <div class="card-title">Chrome / Edge</div>
+        <div class="card-desc" style="margin-bottom: 0">
+          1. Click the <strong>🔒 lock icon</strong> to the left of the URL.<br>
+          2. Find <strong>Microphone</strong> in the dropdown.<br>
+          3. Set it to <strong>Allow</strong>.<br>
+          4. Reload the page (F5).
+        </div>
+      </div>
+      <div class="card" style="margin-bottom: 12px">
+        <div class="card-title">Firefox</div>
+        <div class="card-desc" style="margin-bottom: 0">
+          1. Click the <strong>🔒 lock icon</strong> to the left of the URL.<br>
+          2. Click the <strong>&gt;</strong> next to "Permissions".<br>
+          3. Remove the block on "Use the Microphone".<br>
+          4. Reload the page (F5).
+        </div>
+      </div>
+      <div class="card" style="margin-bottom: 16px">
+        <div class="card-title">Safari</div>
+        <div class="card-desc" style="margin-bottom: 0">
+          1. Safari menu → <strong>Settings → Websites → Microphone</strong>.<br>
+          2. Find this site and set it to <strong>Allow</strong>.<br>
+          3. Reload the page (⌘R).
+        </div>
+      </div>
+      <div class="flex-row">
+        <button class="btn btn-primary" id="mic-blocked-retry">Try Again</button>
+        <button class="btn btn-secondary" id="mic-blocked-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ WELCOME ═══ -->
+  <div class="screen" id="screen-welcome">
+    <div class="header" style="padding-top: 40px">
+      <h1>PodSync Web</h1>
+      <div class="subtitle">Crystal-clear podcast recording — entirely in your browser.</div>
+    </div>
+    <div class="card">
+      <div style="font-size: 44px; text-align: center; margin-bottom: 12px">🎙️</div>
+      <div class="card-title" style="text-align: center">Each voice, recorded locally</div>
+      <div class="card-desc" style="text-align: center">
+        Every participant records their own mic on their own PC at studio quality.
+        No internet hiccups, no compression, no cut-outs.
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" data-goto="signup">Create an account</button>
+    <div class="spacer"></div>
+    <div style="text-align: center; font-size: 13px; color: var(--text-dim)">
+      Already have an account?
+      <a href="#" style="color: var(--accent-hover); text-decoration: none; margin-left: 4px" data-goto="login">Log in</a>
+    </div>
+  </div>
+
+  <!-- ═══ SIGNUP ═══ -->
+  <div class="screen" id="screen-signup">
+    <span class="back-link" data-goto="welcome">← Back</span>
+    <div class="header">
+      <h1>Create Your Account</h1>
+      <div class="subtitle">Your account stores your hosted sessions in the cloud library.</div>
+    </div>
+    <div class="card">
+      <div class="input-label">Display Name</div>
+      <input id="signup-display" placeholder="e.g. Brenden" autocomplete="off">
+      <div class="spacer"></div>
+      <div class="input-label">Username</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px">Letters, numbers, dashes, underscores. Cannot be changed later.</div>
+      <input id="signup-username" placeholder="e.g. BRENDEN" autocomplete="off">
+      <div class="spacer"></div>
+      <div class="input-label">Email</div>
+      <input id="signup-email" type="email" placeholder="you@example.com" autocomplete="off">
+      <div class="spacer"></div>
+      <div class="input-label">Password</div>
+      <input id="signup-password" type="password" placeholder="At least 4 characters" autocomplete="new-password">
+      <div class="spacer"></div>
+      <div class="input-label">Confirm Password</div>
+      <input id="signup-password2" type="password" placeholder="Type it again" autocomplete="new-password">
+      <div class="spacer"></div>
+      <button class="btn btn-primary" id="signup-btn">Create Account</button>
+      <div class="status" id="signup-status"></div>
+    </div>
+  </div>
+
+  <!-- ═══ LOGIN ═══ -->
+  <div class="screen" id="screen-login">
+    <span class="back-link" data-goto="welcome">← Back</span>
+    <div class="header">
+      <h1>Sign In</h1>
+      <div class="subtitle">Enter the username and password you used at signup.</div>
+    </div>
+    <div class="card">
+      <div class="input-label">Username</div>
+      <input id="login-username" autocomplete="username">
+      <div class="spacer"></div>
+      <div class="input-label">Password</div>
+      <input id="login-password" type="password" autocomplete="current-password">
+      <div class="spacer"></div>
+      <button class="btn btn-primary" id="login-btn">Sign In</button>
+      <div class="status" id="login-status"></div>
+    </div>
+  </div>
+
+  <!-- ═══ HOME ═══ -->
+  <div class="screen" id="screen-home">
+    <div class="header">
+      <h1>PodSync</h1>
+      <div class="subtitle" id="home-welcome"></div>
+    </div>
+    <div class="card" data-goto="host" style="cursor: pointer">
+      <div class="card-title">Host a Session</div>
+      <div class="card-desc">Create a room, invite participants, and control recording.</div>
+      <button class="btn btn-primary">Start as Host</button>
+    </div>
+    <div class="card" data-goto="guest" style="cursor: pointer">
+      <div class="card-title">Join a Session</div>
+      <div class="card-desc">Connect to a host's room and record your audio locally.</div>
+      <button class="btn btn-primary">Join as Guest</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="flex-row">
+      <button class="btn btn-secondary" data-goto="sessions">📁 Sessions</button>
+      <button class="btn btn-secondary" data-goto="test">🎤 Test Audio</button>
+    </div>
+    <div style="margin-top: 8px">
+      <button class="btn btn-secondary" data-goto="settings">⚙ Settings</button>
+    </div>
+    <div id="home-admin-row" class="hidden" style="margin-top: 8px">
+      <button class="btn btn-secondary" data-goto="admin">🛠 Admin Panel</button>
+    </div>
+    <div class="mt-auto"></div>
+    <div class="spacer-lg"></div>
+    <div style="text-align: center; padding: 16px 0 8px">
+      <div style="font-size: 12px; color: var(--text-muted); font-family: 'Outfit', sans-serif; letter-spacing: 0.03em">Created by Darkness Prevails V 0.1</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; opacity: 0.6">© Eeriecast, LLC 2026</div>
+    </div>
+  </div>
+
+  <!-- ═══ HOST ═══ -->
+  <div class="screen" id="screen-host">
+    <span class="back-link" id="host-back">← Back</span>
+    <div class="header"><h1>Host Session</h1></div>
+
+    <div id="host-pre">
+      <div class="card">
+        <div class="input-label">Session Name (optional)</div>
+        <input id="host-session-name" placeholder="e.g. Episode 42">
+        <div class="spacer"></div>
+        <div class="input-label">Microphone</div>
+        <select id="host-mic"><option value="">System Default</option></select>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" id="host-create-btn">Create Room</button>
+        <div class="status" id="host-pre-status"></div>
+      </div>
+    </div>
+
+    <div id="host-room" class="hidden">
+      <div class="card">
+        <div class="input-label">Share with your guests</div>
+        <div class="spacer"></div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px">
+          <span style="color: var(--text-dim); font-size: 12px; min-width: 40px">Room:</span>
+          <span class="code-display" id="host-room-code"></span>
+          <button class="btn btn-secondary btn-sm" data-copy="host-room-code">Copy</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span style="color: var(--text-dim); font-size: 12px; min-width: 40px">PIN:</span>
+          <span class="pin-display" id="host-pin"></span>
+          <button class="btn btn-secondary btn-sm" data-copy="host-pin">Copy</button>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-secondary" id="host-copy-both">Copy Both</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Participants</div>
+        <div id="host-participants"></div>
+        <div id="host-ready-status" class="status status-info"></div>
+      </div>
+
+      <div class="level-bar"><div class="level-fill" id="host-level"></div></div>
+      <div class="timer hidden" id="host-timer">00:00:00</div>
+
+      <div class="flex-center" id="host-record-area">
+        <button class="btn btn-record" id="host-record-btn">⏺ Record</button>
+      </div>
+      <div class="flex-row hidden" id="host-stop-area">
+        <button class="btn btn-danger" id="host-stop-btn" style="flex: 1">■ Stop</button>
+        <button class="btn btn-secondary" id="host-sync-btn" style="flex: 0 0 auto; min-width: 120px">♫ Sync Tone</button>
+      </div>
+
+      <div class="status" id="host-status"></div>
+      <div class="progress-bar hidden" id="host-upload-bar"><div class="progress-fill" id="host-upload-fill"></div></div>
+      <div class="flex-row hidden" id="host-post-actions">
+        <button class="btn btn-secondary" id="host-dl-btn">⬇ Download Local Copy</button>
+        <button class="btn btn-secondary" data-goto="sessions">📁 Sessions</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ GUEST ═══ -->
+  <div class="screen" id="screen-guest">
+    <span class="back-link" id="guest-back">← Back</span>
+    <div class="header"><h1>Join Session</h1></div>
+
+    <div id="guest-pre">
+      <div class="card">
+        <div class="input-label">Room Code</div>
+        <input id="guest-room" placeholder="Enter room code" style="text-transform: uppercase; font-size: 18px; letter-spacing: 0.1em; text-align: center">
+        <div class="spacer"></div>
+        <div class="input-label">PIN</div>
+        <input id="guest-pin" placeholder="4-digit PIN" style="text-align: center; font-size: 18px; letter-spacing: 0.1em" maxlength="4">
+        <div class="spacer"></div>
+        <div class="input-label">Microphone</div>
+        <select id="guest-mic"><option value="">System Default</option></select>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" id="guest-connect-btn">Connect</button>
+        <div class="status" id="guest-pre-status"></div>
+      </div>
+    </div>
+
+    <div id="guest-session" class="hidden">
+      <div class="card">
+        <div class="card-title" id="guest-session-label">Connected</div>
+        <div id="guest-participants"></div>
+      </div>
+      <div class="level-bar"><div class="level-fill" id="guest-level"></div></div>
+      <div class="timer hidden" id="guest-timer">00:00:00</div>
+      <div class="status" id="guest-status">Waiting for host to start recording…</div>
+      <div class="progress-bar hidden" id="guest-upload-bar"><div class="progress-fill" id="guest-upload-fill"></div></div>
+      <div class="flex-row hidden" id="guest-post-actions">
+        <button class="btn btn-secondary" id="guest-dl-btn">⬇ Download Local Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SESSIONS ═══ -->
+  <div class="screen" id="screen-sessions">
+    <span class="back-link" data-goto="home">← Back</span>
+    <div class="header"><h1>Sessions Library</h1></div>
+    <div class="usage-info" id="sessions-usage"></div>
+    <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap">
+      <button class="btn btn-secondary" id="sessions-refresh" style="flex: 1; min-width: 140px">Refresh</button>
+    </div>
+    <div class="subtitle" style="margin-bottom: 12px; font-size: 13px; color: var(--text-dim)">
+      Sessions below are ones YOU hosted. Guest recordings save directly to your downloads folder when you stop.
+    </div>
+    <div class="status" id="sessions-status">Loading…</div>
+    <div id="sessions-list"></div>
+  </div>
+
+  <!-- ═══ TEST AUDIO ═══ -->
+  <div class="screen" id="screen-test">
+    <span class="back-link" id="test-back">← Back</span>
+    <div class="header">
+      <h1>Test Audio</h1>
+      <div class="subtitle">Record a short clip to verify your mic.</div>
+    </div>
+    <div class="card">
+      <div class="input-label">Input Device</div>
+      <select id="test-input"><option value="">System Default</option></select>
+    </div>
+    <div class="level-bar"><div class="level-fill" id="test-level"></div></div>
+    <div class="timer" id="test-timer">0:00 / 0:10</div>
+    <div class="flex-center" id="test-record-area">
+      <button class="btn btn-record" id="test-record-btn">⏺ Record Test</button>
+    </div>
+    <div class="flex-center hidden" id="test-stop-area">
+      <button class="btn btn-danger" id="test-stop-btn">■ Stop</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="flex-center hidden" id="test-play-area">
+      <button class="btn btn-primary" id="test-play-btn">▶ Play Back</button>
+    </div>
+    <div class="status" id="test-status"></div>
+  </div>
+
+  <!-- ═══ SETTINGS ═══ -->
+  <div class="screen" id="screen-settings">
+    <span class="back-link" data-goto="home">← Back</span>
+    <div class="header"><h1>Settings</h1></div>
+    <div class="card">
+      <div class="input-label">Display Name</div>
+      <input id="settings-display">
+      <div class="spacer"></div>
+      <div class="input-label">Username (locked)</div>
+      <input id="settings-username" disabled>
+      <div class="spacer"></div>
+      <div class="input-label">Email</div>
+      <input id="settings-email">
+      <div class="spacer"></div>
+      <div class="input-label">Default Microphone</div>
+      <select id="settings-mic"><option value="">System Default</option></select>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px">
+        Device labels only appear after you grant mic permission at least once.
+      </div>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" id="settings-save">Save</button>
+      <div class="status" id="settings-status"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Change Password</div>
+      <div class="input-label" style="margin-top: 8px">Current Password</div>
+      <input id="settings-old-pw" type="password" autocomplete="current-password">
+      <div class="spacer"></div>
+      <div class="input-label">New Password</div>
+      <input id="settings-new-pw" type="password" autocomplete="new-password">
+      <div class="spacer"></div>
+      <button class="btn btn-secondary" id="settings-change-pw">Change Password</button>
+      <div class="status" id="settings-pw-status"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Admin Token</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px">
+        Leave blank unless you're the PodSync operator. When set, enables the Admin Panel on the home screen.
+      </div>
+      <input id="settings-admin-token" type="password" autocomplete="off" placeholder="(none)">
+      <div class="spacer"></div>
+      <button class="btn btn-secondary" id="settings-admin-save">Save Admin Token</button>
+      <div class="status" id="settings-admin-status"></div>
+    </div>
+
+    <div class="card">
+      <button class="btn btn-secondary" id="settings-logout">Log Out</button>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px">
+        Clears your account from this browser. Your sessions on the server stay intact.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADMIN PANEL ═══ -->
+  <div class="screen" id="screen-admin">
+    <span class="back-link" data-goto="home">← Back</span>
+    <div class="header">
+      <h1>Admin Panel</h1>
+      <div class="subtitle">Relay-wide user + session management. Requires a valid admin token.</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-admin-tab="users">👥 Users</button>
+      <button class="admin-tab" data-admin-tab="sessions">🎙 Sessions</button>
+    </div>
+
+    <!-- Users tab -->
+    <div id="admin-tab-users" class="admin-tab-panel">
+      <div class="flex-row" style="margin-bottom: 12px">
+        <button class="btn btn-secondary" id="admin-load-users">Refresh Users</button>
+      </div>
+      <div class="status" id="admin-users-status"></div>
+      <div id="admin-users-list"></div>
+    </div>
+
+    <!-- Sessions tab -->
+    <div id="admin-tab-sessions" class="admin-tab-panel hidden">
+      <div class="flex-row" style="margin-bottom: 8px; align-items: center; gap: 8px">
+        <button class="btn btn-secondary" id="admin-load-sessions" style="flex: 0 0 auto">Refresh Sessions</button>
+        <div id="admin-sessions-filter-badge" class="hidden" style="font-size: 12px; color: var(--accent-hover); flex: 1">Filtered</div>
+        <button class="btn btn-secondary btn-sm" id="admin-clear-filter" style="flex: 0 0 auto; display: none">✕ Clear filter</button>
+      </div>
+      <div class="status" id="admin-sessions-status"></div>
+      <div id="admin-sessions-list"></div>
+    </div>
+  </div>
+
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

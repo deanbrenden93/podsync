@@ -1,0 +1,28 @@
+# Backend — never publish. Lives on Hetzner only.
+relay.py
+
+# Local dev server — not needed for GitHub Pages.
+serve.py
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# Build / logs
+*.log
+dist/
+build/
+node_modules/
