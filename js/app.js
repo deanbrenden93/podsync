@@ -305,7 +305,7 @@ function wireHostRelay(r) {
   r.onParticipants = (users) => renderParticipants('host', users);
   r.onPrepare = async (_t, sessionName, sessionId) => {
     currentSessionId = sessionId;
-    recorder.start();
+    await recorder.start();
     isRecording = true;
     startTimer('host');
     $('host-record-area').classList.add('hidden');
@@ -465,7 +465,7 @@ function wireGuestRelay(r) {
   r.onPrepare = async (_t, sessionName, sessionId) => {
     currentSessionId = sessionId;
     if (sessionName) currentSessionName = sessionName;
-    recorder.start();
+    await recorder.start();
     isRecording = true;
     startTimer('guest');
     $('guest-status').textContent = 'Recording…';

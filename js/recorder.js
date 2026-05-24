@@ -278,12 +278,22 @@ export class Recorder {
     }
   }
 
-  start() {
+  async start() {
     if (!this._isArmed) {
       throw new Error('Recorder.start() called before arm()');
     }
     this._chunks = [];
     this._framesWritten = 0;
+
+    // If we were using OPFS but the previous stop() closed and nulled
+    // the writer, open a fresh OPFS file for this recording. This is
+    // what lets a single armed room do multiple back-to-back recordings
+    // (e.g. a host doing a quick test recording before the real one).
+    // If OPFS reopen fails, _tryOpenOpfs flips _useOpfs to false and
+    // we transparently fall back to the in-memory path.
+    if (this._useOpfs && !this._opfsWriter) {
+      await this._tryOpenOpfs();
+    }
 
     if (this._useOpfs && this._opfsWriter) {
       // Reserve the first 44 bytes for the WAV header. We write a
