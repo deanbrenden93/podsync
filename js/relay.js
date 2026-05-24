@@ -6,7 +6,7 @@
  * are JSON with a `type` field; both sides use ping/pong for keepalive.
  */
 
-export const DEFAULT_RELAY_URL = 'wss://podsync-eeriecast.duckdns.org/ws';
+export const DEFAULT_RELAY_URL = 'wss://relay.eeriecast.com/ws';
 
 export function generatePin() {
   return String(1000 + Math.floor(Math.random() * 9000));

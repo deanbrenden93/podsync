@@ -6,7 +6,7 @@
  * `progress` event, while fetch only does response progress.
  */
 
-export const DEFAULT_LIBRARY_BASE = 'https://podsync-eeriecast.duckdns.org';
+export const DEFAULT_LIBRARY_BASE = 'https://relay.eeriecast.com';
 
 // Match library.py's multipart threshold so we behave the same as the
 // desktop client. Browsers can send quite large bodies via XHR in one
